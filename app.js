@@ -62,11 +62,11 @@ app.use("/",async (req,res,next)=>{
   });
 
 app.get("/", async(req,res)=>{
-	if(!req.session.flag){
+	if(!xss(req.session.flag)){
 		res.render("phone/login",{title:"User login",heading:"User login"});
 	}
 	else {
-		res.render('phone/user');		
+		res.render('phone/user',{session: true,username:req.session.user.username ,title:"Welcome"});		
 	} 
 });
 
@@ -153,7 +153,7 @@ app.post("/login",async(req,res)=>{
 	  		req.session.flag = true;
 	  		res.render("phone/user", {
 				username: User.username, 
-				title: "Devices", 
+				title: "Welcome", 
 				session: true, 
 				message: "Logged In!"
 			});
@@ -164,7 +164,12 @@ app.post("/login",async(req,res)=>{
 
 //create a new user
 app.get("/creatUser", async (req, res) => {
-	res.render("phone/createUser");
+	if(!req.session.flag){
+		res.render("phone/createUser",{title:"New User"})
+	}
+	else{
+		res.redirect("/");
+	}
 });
 
 app.post("/creatUser", async (req, res) => {
@@ -203,12 +208,14 @@ app.post("/creatUser", async (req, res) => {
 			userData.createUser(username,email,password);
 			 
 		 	res.render("phone/login", {
-				error: "User succesfully created. Please log in!"
+				error: "User succesfully created. Please log in!",
+				title:"Login"
 			});
 		}
 		else {
 			res.render('phone/createUser', {
-				error: "User or email already exists"
+				error: "User or email already exists",
+				title:"New User"
 			})
 		}
 	}
@@ -216,25 +223,23 @@ app.post("/creatUser", async (req, res) => {
 
 app.get("/logout", async (req,res) => {
 	if (!req.session.flag) {
-		res.render("phone/login", {error:"You are not logged in!"});
+		res.render("phone/login", {error:"You are not logged in!",title:Login});
 
 		return;
 	}
 
-	let user = req.session.user.username;
+	let user = xss(req.session.user.username);
 
 	req.session.flag = undefined;
 	req.session.destroy();
 
 	res.render("phone/login", {
-		error: "You are now logged out!"
+		error: "You are now logged out!",
+		title:"Logged out"
 	});
 });
 /*/login system end/*/
 
-app.get('/login', async (req, res) => {
-	res.render('phone/login');
-});
 
 configRoutes(app);
 
