@@ -1,16 +1,16 @@
 <form action="/login" method="post">
     <div class="login-container">
         <div class="login-item">
-            <h3>Login</h3>
+            <h2>Login</h2>
         </div>
         <div class="login-item">
-            <label>Enter username or email:</label>
-            <input type="text" name="username" value="{{username}}" required />
+            <label for="username">Enter username or email:</label>
+            <input type="text" id="username" name="username" value="{{username}}" required />
             <br />
         </div>
         <div class="login-item">
-            <label>Password:</label>
-            <input type="password" name="password" required />
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required />
         </div>
         <div class="login-item">
             <input class="button primary" type="submit" value="Submit" required />
