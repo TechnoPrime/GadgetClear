@@ -103,7 +103,7 @@ router.post("/getMobileById/removeComment", async (req, res) => {
 
 
 router.get('/compare', async (req, res) => {
-    res.render('phone/comparedevice')
+    res.render('phone/comparedevice',{session:true})
 })
 
 router.post('/compare', async (req, res) => {
@@ -129,7 +129,8 @@ router.post('/compare', async (req, res) => {
         res.render('phone/compareresult', {
             devicelist: compareresult,
             checkerror: error,
-            title:"Compared Devices"
+            title:"Compared Devices",
+            session:true
             
         });
     }
