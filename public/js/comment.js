@@ -56,9 +56,9 @@ function newComment(deviceid){
 }
 
 function removePost(author_name,userId,postId){
-	console.log(author_name);
-	console.log(userId);
-	console.log(postId);
+	// console.log(author_name);
+	// console.log(userId);
+	// console.log(postId);
 	if(author_name===userId){
 		let xhttp = new XMLHttpRequest();
 		xhttp.onreadystatechange=function() {

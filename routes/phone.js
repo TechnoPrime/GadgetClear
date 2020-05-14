@@ -114,18 +114,23 @@ router.post('/compare', async (req, res) => {
     const compareresult = await fetchDetails.getCompareDevice(deviceOne, deviceTwo);
 
     compareresult.forEach(device => {
-        console.log(device)
+        //console.log(device)
         if (device === null || device === undefined)
             error = true;
     })
-
+    let deviceOnename=deviceOne;
+    deviceOnename = deviceOnename.replace(/ /g, "+");
+    let deviceTwoname=deviceTwo;
+    deviceTwoname = deviceTwoname.replace(/ /g, "+");
     if(!xss(req.session.flag)){
 		res.render("phone/login",{title:"User login",heading:"User login"});
     }
     else {
         res.render('phone/compareresult', {
             devicelist: compareresult,
-            checkerror: error
+            checkerror: error,
+            title:"Compared Devices"
+            
         });
     }
 })
