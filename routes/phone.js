@@ -54,6 +54,8 @@ router.get('/getMobileById', async (req,res) => {
     req.session.deviceToRate=xss(req.query.dev_id);
 //console.log(getDeviceById);
     let the_comments = await comments.getcommentByDevice(getDeviceById);
+    let queryFixedDN=getDeviceById.device;
+    queryFixedDN = queryFixedDN.replace(/ /g, "+");
 
     res.render('phone/phonedetails', {
         brand: getDeviceById,
@@ -61,7 +63,8 @@ router.get('/getMobileById', async (req,res) => {
         posts: the_comments,
         rating: getDeviceById.overallRating,
         session:true,
-        title:"List"
+        title:"List",
+        deviceName:queryFixedDN
 
     });
 

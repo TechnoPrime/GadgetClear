@@ -53,7 +53,7 @@
                 <td>{{brand.Chipset}}</td>
             </tr>
             <tr>
-                <th class="info" valign="top">Memory</th>
+                <th class="info">Memory</th>
                 <td>{{brand.Internal}}</td>
             </tr>
             <tr>
@@ -67,13 +67,13 @@
             <tr>
                 <th class="info">Buy</th>
                 <td>
-                    <a href="https://www.amazon.com/s?k={{brand.device}}&ref=is_s" class="btn btn-secondary btn-lg active buy-button" role="button" aria-pressed="true">Buy</a>
+                    <a href="https://www.amazon.com/s?k={{deviceName}}&ref=is_s" class="btn btn-secondary btn-lg active buy-button" role="button" aria-pressed="true">Buy</a>
                 </td>
             </tr>
             <tr>
                 <th class="info video">Device video</th>
                 <td>
-                    <iframe width="620" height="350" src="https://www.youtube.com/embed?listType=search&list={{brand.device}}">
+                    <iframe width="620" height="350" src="https://www.youtube.com/embed?listType=search&list={{deviceName}}">
                     </iframe>
                 </td>
             </tr>
