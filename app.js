@@ -9,15 +9,9 @@ const userData =  require("./data/login");
 const session = require('express-session');
 const { exec } = require('child_process');
 const mongoose = require('mongoose')
+const Admin = mongoose.mongo.Admin;
 var xss = require("xss");
-const reviews = require('./data/review');
-const cookies = require('cookie-parser');
 
-
-// mongoose.connect('mongodb://localhost:27017/Gadget_Clear', function(){
-//     /* Drop the DB */
-//     mongoose.connection.db.dropDatabase();
-// });
 
 const handlebarsInstance = exphbs.create({
 	defaultLayout: 'main'
@@ -27,7 +21,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded(
   {extended:true}
 ));
-app.use(cookies());
 
 app.use(session({
 	key:"AuthCookie",
@@ -69,11 +62,11 @@ app.use("/",async (req,res,next)=>{
   });
 
 app.get("/", async(req,res)=>{
-	if(!req.session.flag){
+	if(!xss(req.session.flag)){
 		res.render("phone/login",{title:"User login",heading:"User login"});
 	}
 	else {
-		res.render('phone/user');		
+		res.render('phone/user',{session: true,username:req.session.user.username ,title:"Welcome"});		
 	} 
 });
 
@@ -157,11 +150,10 @@ app.post("/login",async(req,res)=>{
 			});
 		}
 		else {
-			req.session.flag = true;
-			res.cookie("Auth_Cookie",User.username);
+	  		req.session.flag = true;
 	  		res.render("phone/user", {
 				username: User.username, 
-				title: "Devices", 
+				title: "Welcome", 
 				session: true, 
 				message: "Logged In!"
 			});
@@ -172,7 +164,12 @@ app.post("/login",async(req,res)=>{
 
 //create a new user
 app.get("/creatUser", async (req, res) => {
-	res.render("phone/createUser");
+	if(!req.session.flag){
+		res.render("phone/createUser",{title:"New User"})
+	}
+	else{
+		res.redirect("/");
+	}
 });
 
 app.post("/creatUser", async (req, res) => {
@@ -211,12 +208,14 @@ app.post("/creatUser", async (req, res) => {
 			userData.createUser(username,email,password);
 			 
 		 	res.render("phone/login", {
-				error: "User succesfully created. Please log in!"
+				error: "User succesfully created. Please log in!",
+				title:"Login"
 			});
 		}
 		else {
 			res.render('phone/createUser', {
-				error: "User or email already exists"
+				error: "User or email already exists",
+				title:"New User"
 			})
 		}
 	}
@@ -224,104 +223,54 @@ app.post("/creatUser", async (req, res) => {
 
 app.get("/logout", async (req,res) => {
 	if (!req.session.flag) {
-		res.render("phone/login", {error:"You are not logged in!"});
+		res.render("phone/login", {error:"You are not logged in!",title:Login});
 
 		return;
 	}
 
-	let user = req.session.user.username;
+	let user = xss(req.session.user.username);
 
 	req.session.flag = undefined;
 	req.session.destroy();
 
 	res.render("phone/login", {
-		error: "You are now logged out!"
+		error: "You are now logged out!",
+		title:"Logged out"
 	});
 });
 /*/login system end/*/
 
-app.get("/reviews", async (req, res) => {
-	//console.log(req.cookies.Auth_Cookie);
-	let user = await userData.checkUser(req.cookies.Auth_Cookie);
-	//console.log(user);
-
-	try{
-	let allReviews = await reviews.getAllReview()
-	//console.log(user.username);
-	res.render("reviews",{
-		title: "Review page",
-		username: user.username,
-		posts: allReviews
-	});
-	console.log("rendered reviews")
-	}catch(e){
-		console.log(e);
-	}
-});
-
-app.post("/reviews/newReview", async (req, res) => {
-
-	let user = await userData.checkUser(req.cookies.Auth_Cookie);
-	//let name = req.body.username;
-	//console.log("the name is" + name);
-	let postTitle = req.body.postTitle;
-	let postContent = req.body.postContent;
-
-	try{
-		let addedPost = await reviews.createReviews(postTitle,user.username,postContent);
-		res.status(200).end();
-	}catch(e){
-		console.log("There was an error! " + e);
-		res.status(400).end();
-	}
-
-});
-
-app.post("/reviews/removeReview", async (req, res) => {
-	let review = req.body.postId;
-	let id = ObjectId(review);
-	//console.log(typeof id);
-
-	try{
-		var removeReview = await reviews.deleteReview(id);
-		res.status(200).end();
-	}catch(e){
-		console.log("There was an error! " + e);
-		res.status(400).end();
-	}
-
-});
-
-// app.get('/login', async (req, res) => {
-// 	res.render('phone/login');
-// });
-
-// app.get('/search', async (req, res) => {
-// 	res.render('phone/homepage');
-// })
-
-// app.use("*",async (req,res)=>{
-// 	res.status(404).json({error: "Page Not Found"});
-// });
-//calculates the stars per user
-
-
 
 configRoutes(app);
 
-app.listen(3000, async() => {
-	// Run node command to create database
-	setTimeout(() => {
-		exec("node ./data/phonedb.js", (err, stdout, stderr) => {
-			if(!err){
-			console.log('sucess', stdout)
+function isDatabase(db) {
+	return db.name === 'Gadget_Clear';
+}
+app.listen(3000, async () => {
+	/// create a connection to the DB    
+	var connection = mongoose.createConnection('mongodb://localhost:27017', { useNewUrlParser: true, useUnifiedTopology: true });
+
+	connection.on('open', function () {
+		// Connection established
+		new Admin(connection.db).listDatabases(function (err, result) {
+			// Database list stored in result.databases
+			var allDatabases = result.databases;
+
+			var found = allDatabases.find(isDatabase);
+
+			if (typeof found === 'undefined') {
+				setTimeout(() => {
+					exec("node ./data/phonedb.js", (err, stdout, stderr) => {
+						if (!err) {
+							console.log('sucess', stdout)
+						} else {
+							console.log(err);
+						}
+					})
+				}, 300);
 			}
-			else{
-				console.log(err);
-			}
-		})
-	}, 300);  
+		});
+	});
 	console.log("We've now got a server!");
 	console.log('Your routes will be running on http://localhost:3000');
 });
-

@@ -10,46 +10,65 @@ const comments = require('../data/comments');
 
 
 router.get('/search', async (req, res) => {
-    res.render('phone/homepage');
+    if(!xss(req.session.flag)){
+		res.render("phone/login",{title:"User login",heading:"User login"});
+    }
+    else
+    {
+        res.render('phone/homepage',{session: true , title:"Search"});
+    }
 });
 
-router.get('/phonelist', async (req, res) => {
-
-    res.render('phone/phonelist');
+router.get('/home', async (req, res) => {
+    res.redirect('/search')
 });
 
 router.post('/submit', async (req, res) => {
-    const brand = req.body.brand;
-    const display = req.body.display;
-    const processor = req.body.processor;
-    const storage = req.body.storage;
+    const brand = xss(req.body.brand);
+    const display = xss(req.body.display);
+    const processor = xss(req.body.processor);
+    const storage = xss(req.body.storage);
 
     const getDevice = await fetchDetails.getDevice(brand, display, processor, storage)
 
+    req.session.phonelistFlag=1;
+
     res.render('phone/phonelist', {
-       brand: getDevice
+       brand: getDevice,
+       session: true,
+       title:"List"
     });
 });
 
-router.get('/getMobileById', async (req,res) => {
-    const getDeviceById = await fetchDetails.getDeviceById(req.query.dev_id);
-    req.session.deviceToRate=req.query.dev_id;
-console.log(getDeviceById);
-    let the_comments = await comments.getcommentByDevice(getDeviceById);
+router.get('/getMobileById', async (req, res) => {
+    if(!xss(req.session.flag)){
+		res.render("phone/login",{title:"User login",heading:"User login"});
+	}
+    else{
+        const getDeviceById = await fetchDetails.getDeviceById(xss(req.query.dev_id));
+        req.session.deviceToRate=xss(req.query.dev_id);
 
-    res.render('phone/phonedetails', {
-        brand: getDeviceById,
-        username: the_comments.author,
-        posts: the_comments,
-        rating: getDeviceById.overallRating
-    });
+        let the_comments = await comments.getcommentByDevice(getDeviceById);
+        let queryFixedDN=getDeviceById.device;
+        queryFixedDN = queryFixedDN.replace(/ /g, "+");
+
+        res.render('phone/phonedetails', {
+            brand: getDeviceById,
+            username: the_comments.author,
+            posts: the_comments,
+            rating: getDeviceById.overallRating,
+            session:true,
+            title:"List",
+            deviceName:queryFixedDN
+        });
+    }
 })
 
 router.post('/getMobileById/comment', async (req, res) => {
     //console.log("==================");
-    const getDeviceById = await fetchDetails.getDeviceById(req.session.deviceToRate);
-    let postContent = req.body.postContent;
-    const userinfo = req.session.user;
+    const getDeviceById = await fetchDetails.getDeviceById(xss(req.session.deviceToRate));
+    let postContent = xss(req.body.postContent);
+    const userinfo = xss(req.session.user);
     let author = "";
     if(userinfo != undefined && userinfo != null){
         author = userinfo.username;
@@ -67,11 +86,10 @@ router.post('/getMobileById/comment', async (req, res) => {
 })
 
 router.post("/getMobileById/removeComment", async (req, res) => {
-    let comment = req.body.postId;
+    let comment = xss(req.body.postId);
     if(typeof comment == "string"){
         let id = ObjectId(comment);
     }
-	//console.log(typeof id);
 
 	try{
 		let remove_comment = await comments.deletecomment(id);
@@ -83,88 +101,87 @@ router.post("/getMobileById/removeComment", async (req, res) => {
 
 });
 
+
+router.get('/compare', async (req, res) => {
+    res.render('phone/comparedevice')
+})
+
 router.post('/compare', async (req, res) => {
     const deviceOne = req.body.deviceOne;
     const deviceTwo = req.body.deviceTwo;
+    let error = false
 
-    res.render('phone/comparedevice', {
-        deviceOne: deviceOne,
-        deviceTwo: deviceTwo
-    });
-})
+    const compareresult = await fetchDetails.getCompareDevice(deviceOne, deviceTwo);
 
-router.get('/phone', async (req, res) => {
-    const device = req.body.device;
-
-    res.render('phone/phonedetails', {
-        device: device
-    });
-})
-
-router.get('/buy', async (req, res) => {
-    const link = req.body.link;
-
-    res.render('phone/buydevice', {
-        link: link
+    compareresult.forEach(device => {
+        console.log(device)
+        if (device === null || device === undefined)
+            error = true;
     })
+
+    if(!xss(req.session.flag)){
+		res.render("phone/login",{title:"User login",heading:"User login"});
+    }
+    else {
+        res.render('phone/compareresult', {
+            devicelist: compareresult,
+            checkerror: error
+        });
+    }
 })
+
+
 
 router.post("/starCalc", async (req, res) => {
-    
     //console.log(req.session.deviceToRate);
     const score=xss(req.body.value);
-    deviceId=ObjectId(req.session.deviceToRate);
+    deviceId=ObjectId(xss(req.session.deviceToRate));
     //console.log(req.session.user._id);
     const mobileCollection= await phones();
-    const userid=req.session.user._id;
+    const userid=xss(req.session.user._id);
     const usersRating={
         userid,
-        score
-        
+        score   
     }
     
     const getDevice = await fetchDetails.getDeviceById(req.session.deviceToRate);
-let flag=1; //checks if inserted in for loop
+    let flag=1; //checks if inserted in for loop
 
-for(let i=0;i<await getDevice.UserRating.length;i++){
-    if(await getDevice.UserRating[i].userid===userid){
-            //console.log("here");
-        
-         flag=0;
-            await mobileCollection.updateOne( {_id : deviceId , "UserRating.score" : await getDevice.UserRating[i].score } , 
-            {$set : {"UserRating.$.score" : score} } , 
-            false , 
-            true);
-
+    for(let i=0;i<await getDevice.UserRating.length;i++){
+        if(await getDevice.UserRating[i].userid===userid){
+                //console.log("here");
+            
+            flag=0;
+            await mobileCollection.updateOne( {_id : deviceId , "UserRating.score" : await getDevice.UserRating[i].score } , {$set : {"UserRating.$.score" : score} } , false , true);
+        }
     }
-}
+    
     if(flag===1){
         await mobileCollection.updateOne({_id:deviceId }, {$addToSet: {UserRating:usersRating}});
     }
     
-   
     const check=getDevice.UserRating;
     //console.log(check);
 
     //update overall rating
     let finalRating=parseFloat(0);
+
     for(let j=0;j<await getDevice.UserRating.length;j++){
      
        // console.log("score"+getDevice.UserRating[j].score);
        finalRating=finalRating+await getDevice.UserRating[j].score;
-    
     }
+
     let ratingLength=await getDevice.UserRating.length;
+
     if(ratingLength===0){
-    finalRating=finalRating/1;
+        finalRating=finalRating/1;
     }
     else{
         finalRating=finalRating/ratingLength;
     }
-    //console.log("final"+finalRating);
+    
     await mobileCollection.updateOne({_id:deviceId }, {$set: {overallRating:finalRating}});
-
-
 });
 
 

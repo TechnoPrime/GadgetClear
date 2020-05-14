@@ -43,15 +43,8 @@ const fetchDevices = async (brandUrl) => {
 const fetchBrands = async () => {
   const $ = await fetchData().catch(console.log);
 
-  // $(".brandmenu-v2 ul li").each((index, element) => {
-  //     let brandUrl = "https://www.gsmarena.com/" + $(element).find("a").attr("href");
-  //     // console.log(brandUrl);
-  //     fetchDevices(brandUrl).catch(console.log);
-  // });
-
   // Change the url of the brand here to generate the list of different brand's devices
   brandUrlArr.forEach(link => fetchDevices(link));
-  // fetchDevices('https://www.gsmarena.com/samsung-phones-9.php').catch(console.log);
 }
 
 // Fetch the device's specifications
@@ -71,8 +64,8 @@ const getResults = async (url) => {
 
   device_specs['device'] = name;
   device_specs['image'] = img.attr().src;
-  device_specs['UserRating']=[];
-  device_specs['overallRating']=0;
+  device_specs['UserRating'] = [];
+  device_specs['overallRating'] = 0;
 
   newDevice[name] = device_specs;
 

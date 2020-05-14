@@ -1,21 +1,7 @@
-
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-
-<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" /><ul class="list-inline rating-list">
-  <li><i class="fa fa-star gray" id="star1"></i></li>
-  <li><i class="fa fa-star gray" id="star2"></i></li>
-  <li><i class="fa fa-star gray" id="star3"></i></li>
-  <li><i class="fa fa-star gray" id="star4"></i></li>
-  <li><i class="fa fa-star gray" id="star5"></i></li>
-</ul>
-<script src="../../public/js/stars.js"></script>
-<P>Help other users! Double click on a star to rate</P>
-<p>{{rating}}/5 stars</p>
 <div class="card">
     <div class="table-title">
         <h1>{{brand.device}}</h1>
-        <span class="back"><a href="/search" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Back</a></span>
+        <span class="back-span"><a href="/search" class="button small">Back</a></span>
     </div>
         
     <table class="table table-bordered success">
@@ -67,7 +53,7 @@
             <tr>
                 <th class="info">Buy</th>
                 <td>
-                    <a href="https://www.amazon.com/s?k={{brand.device}}&ref=is_s" class="btn btn-secondary btn-lg active buy-button" role="button" aria-pressed="true">Buy</a>
+                    <a href="https://www.amazon.com/s?k={{brand.device}}&ref=is_s" class="buy">Buy</a>
                 </td>
             </tr>
             <tr>
@@ -77,33 +63,49 @@
                     </iframe>
                 </td>
             </tr>
+            <tr>
+                <th class="info">Ratings</th>
+                <td>
+                    <ul class="list-inline rating-list">
+                        <li><i class="fa fa-star gray" id="star1"></i></li>
+                        <li><i class="fa fa-star gray" id="star2"></i></li>
+                        <li><i class="fa fa-star gray" id="star3"></i></li>
+                        <li><i class="fa fa-star gray" id="star4"></i></li>
+                        <li><i class="fa fa-star gray" id="star5"></i></li>
+                    </ul>
+                    <script src="../../public/js/stars.js"></script>
+                    <P>Help other users! Double click on a star to rate</P>
+                    <p>{{rating}}/5 stars</p>
+                </td>
+            </tr>
         </thead>
     </table>
     <br>
 </div>
-<a class = "reviewbtn" href="../reviews">Reviews</a>
-            <div class="new-post">
-		<h2 id="favoriteIcon" class="bad-button-thats-not-a-button" onclick="newComment('{{brand._id}}')">New</h2>
+
+<div class="reviews">
+    <a class="reviewbtn" href="../reviews">Reviews</a>
+
+    <div class="new-post">
+        <button class="primary default" onclick="newComment('{{brand._id}}')">New</button>
     </div>
 
-<hr>
-<div id="postParent">
-	{{#each posts}}
-		<div class="post">
-			<div>
-				<h2 style="display: inline-block;"> {{this.device_name}} </h2>
-				<i class="material-icons" onclick="removePost('{{this.name}}','{{../username}}','{{this._id}}')">clear</i>
-			</div>
-			<h3 class="post-author">Author: {{this.author}} </h3>
-			<p>{{this.comment}}</p>
-			<hr>
-		</div>
-	{{else}}
-		<div class="post">
-			<h2>Currently no comments</h2>
-		</div>
-	
-	{{/each}}
+    <hr>
+        <div id="postParent">
+            {{#each posts}}
+                <div class="post">
+                    <div>
+                        <h2 style="display: inline-block;"> {{this.device_name}} </h2>
+                        <i class="material-icons" onclick="removePost('{{this.name}}','{{../username}}','{{this._id}}')">clear</i>
+                    </div>
+                    <h3 class="post-author">Author: {{this.author}} </h3>
+                    <p>{{this.comment}}</p>
+                    <hr>
+                </div>
+            {{else}}
+                <div class="post">
+                    <h2>Currently no comments</h2>
+                </div>
+            {{/each}}
+        </div>
 </div>
-
-<script src="/public/js/comment.js"></script>
